@@ -41,9 +41,9 @@ contract RandomAuction {
     }
     
     // Interface bid().
-    function bid() public returns (bool bid_made) {
+    function bid() public payable returns (bool bid_made) {
         // When the auction is over, go to the payout procedure.
-        if (bytes32(block.number) > generateRandomNumber) {
+        if ((bytes32(block.number))> generateRandomNumber()) {
             return withdraw();
         }
         // Otherwise, record the bid.
@@ -58,15 +58,15 @@ contract RandomAuction {
     
     // Interface withdraw().  Pays back to those who didn't win the
     // auction.  The winner's bid goes to the seller.
-    function withdraw() public returns (bool done) {
+    function withdraw() public payable returns (bool done) {
         // Anything sent along the withdraw request shall be sent back.
         uint payout = msg.value;
         
         // If the auction is still going, withdrawal is not possible.
         // That would require finding the second winner when the current winner cancels
         // its bid.
-        if (bytes32(block.number) < generateRandomNumber) {
-            msg.sender.send(payout);
+        if (bytes32(block.number) < generateRandomNumber()) {
+            msg.sender.transfer(payout);
             return false;
         }
 
@@ -83,14 +83,14 @@ contract RandomAuction {
             bids[msg.sender] = 0;
         }
         // The caller gets its payout.
-        msg.sender.send(payout);
+        msg.sender.transfer(payout);
         return true;
     }
     
     // The winner can be found by looking at the value of max_bidder variable.
     // An invalid call gets a payback (provided sufficient gas).
     
-    function () external {
-        msg.sender.send(msg.value);
+    function () payable external {
+        msg.sender.transfer(msg.value);
     }
 }
